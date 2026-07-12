@@ -4,7 +4,7 @@
   "type": "module",
   "private": false,
   "license": "MIT",
-  "description": "Sanitized public template for a low-friction OpenClaw execution gate",
+  "description": "OpenClaw 低摩擦执行门的脱敏公开模板",
   "main": "./src/index.js",
   "openclaw": { "extensions": ["./src/index.js"] },
   "scripts": {
