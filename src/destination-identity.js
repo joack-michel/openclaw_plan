@@ -35,3 +35,4 @@ function normalizeTarget(value) {
   }
   return text;
 }
+
