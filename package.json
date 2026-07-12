@@ -1,0 +1,17 @@
+{
+  "name": "openclaw-execution-gate-template",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "description": "Sanitized public template for a low-friction OpenClaw execution gate",
+  "main": "./src/index.js",
+  "openclaw": { "extensions": ["./src/index.js"] },
+  "scripts": {
+    "test": "bash scripts/run-tests.sh && bash scripts/test-verify-public-template.sh",
+    "build": "find src -type f -name '*.js' -exec node --check {} \\;",
+    "verify": "bash scripts/verify-public-template.sh"
+  },
+  "engines": { "node": ">=22" },
+  "peerDependencies": { "openclaw": ">=2026.6.11" }
+}

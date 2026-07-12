@@ -1,0 +1,7 @@
+{
+  "agents": [
+    { "id": "memory-agent", "workspace": "~/.openclaw/workspace" },
+    { "id": "commerce-agent", "workspace": "~/.openclaw/workspace" },
+    { "id": "benefits-orchestrator", "workspace": "~/.openclaw/workspace" }
+  ]
+}

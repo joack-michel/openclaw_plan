@@ -1,0 +1,64 @@
+{
+  "id": "execution-gate",
+  "name": "Execution Gate",
+  "description": "First-stage confirmation and transaction gate for protected OpenClaw tool calls.",
+  "version": "0.1.0",
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "trustedToolPolicies": [
+      "execution-gate"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "dbPath": {
+        "type": "string",
+        "default": "~/.openclaw/state/execution-gate.sqlite"
+      },
+      "operationTtlMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "default": 900000
+      },
+      "executionTimeoutMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "default": 120000
+      },
+      "accessControl": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": { "type": "boolean", "default": false },
+          "community": { "type": "string", "default": "example-community" },
+          "building": { "type": "string", "default": "building-a" },
+          "unit": { "type": "string", "default": "unit-1" },
+          "scope": { "type": "string", "default": "example-community:building-a:unit-1:door-open" },
+          "command": { "type": "string", "default": "" }
+        }
+      },
+      "agentIds": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "benefits": { "type": "string", "default": "benefits-orchestrator" },
+          "rem": { "type": "string", "default": "memory-agent" },
+          "meituan": { "type": "string", "default": "commerce-agent" },
+          "mcdonalds": { "type": "string", "default": "commerce-agent" }
+        }
+      },
+      "mockOnly": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  }
+}

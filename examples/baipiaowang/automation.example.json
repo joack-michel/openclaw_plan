@@ -1,0 +1,1 @@
+{ "id": "<JOB_ID>", "enabled": false, "maxConcurrency": 2, "statuses": ["SUCCESS", "ALREADY_CLAIMED", "NOTHING_AVAILABLE", "FAILED", "TIMEOUT", "SKIPPED"], "notify": "<TELEGRAM_USER_ID>" }

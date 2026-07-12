@@ -1,0 +1,12 @@
+{
+  "grants": [
+    {
+      "grantId": "<GRANT_ID>",
+      "jobId": "<JOB_ID>",
+      "status": "REVIEW_REQUIRED",
+      "capabilities": ["READ_WORKSPACE_SAFE", "WRITE_OWN_MEMORY_STATE", "SEND_SELF_NOTIFICATION"],
+      "resources": ["workspace:safe-read", "memory-state:own"],
+      "destinations": ["telegram:<ACCOUNT_ID>:user:<TELEGRAM_USER_ID>"]
+    }
+  ]
+}

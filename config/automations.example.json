@@ -1,0 +1,6 @@
+{
+  "automations": [
+    { "id": "<JOB_ID>", "name": "REM memory scan", "agentId": "memory-agent", "enabled": false, "schedule": { "kind": "cron", "expr": "0 4 * * *", "tz": "Etc/UTC" } },
+    { "id": "<JOB_ID>", "name": "Benefits daily task", "agentId": "benefits-orchestrator", "enabled": false, "schedule": { "kind": "cron", "expr": "1 0 * * *", "tz": "Etc/UTC" } }
+  ]
+}

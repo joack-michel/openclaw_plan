@@ -1,0 +1,1 @@
+{ "enabled": false, "provider": "example", "community": "<COMMUNITY_NAME>", "building": "<BUILDING_ID>", "unit": "<UNIT_ID>", "scope": "<ACCESS_CONTROL_SCOPE>", "entrypoint": "<ACCESS_CONTROL_COMMAND>" }
