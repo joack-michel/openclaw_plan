@@ -284,3 +284,4 @@ function extractDeclaredExecCommands(text) {
 function sameOwnerDestination(identity) {
   return destinationKey(identity) === destinationKey(OWNER_DESTINATION);
 }
+
