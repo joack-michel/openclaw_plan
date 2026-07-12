@@ -55,3 +55,4 @@ expect_fail private-overlay-release-mode bash "$template/scripts/verify-public-t
 (cd "$template" && git init -q && git config user.name "Template Test" && git config user.email "template@example.invalid" && git add . && git commit -qm "base" && printf 'X=1\n' > private-overlay/local.txt && git add -f private-overlay/local.txt && git commit -qm "fixture tracked overlay")
 expect_fail_rule committed-private-overlay forbidden-tracked-path bash "$template/scripts/verify-public-template.sh" --skip-tests
 pass placeholders-allowed
+
