@@ -1,1 +1,2 @@
 { "provider": "mock", "tokenEnv": "MCD_MCP_TOKEN", "query": "QUERY_COUPON", "claim": "CLAIM_COUPON", "order": "CONFIRM", "payment": "CONFIRM" }
+
