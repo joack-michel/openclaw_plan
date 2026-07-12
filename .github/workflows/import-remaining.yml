@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.import/remaining.tgz.b64'
+      - '.import/**'
 
 permissions:
   contents: write
