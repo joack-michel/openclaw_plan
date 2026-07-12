@@ -1,3 +1,3 @@
-# Example topic
+# 示例主题
 
-Fictional topic content used to demonstrate REM scanning.
+此文件使用虚构主题内容演示 REM 记忆扫描。
