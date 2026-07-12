@@ -1,5 +1,29 @@
-# Security model
+# 安全模型
 
-This template prioritizes normal operation, prevention of model mistakes and duplicate effects, financial safety, recoverability, and auditability. Unknown high-impact behavior confirms rather than globally locking the system. Integrity mismatches are warning-only and auditable.
+本模板优先保证：
 
-Credential-like paths and symlink escapes cannot inherit ordinary workspace permissions. Confirmation expires after fifteen minutes by default and is isolated by scope, operation, tool, and parameter hash. Access-control fast paths are disabled by default.
+```text
+系统正常运行
+防止模型误操作
+防止重复执行
+资金安全
+可恢复性
+审计能力
+```
+
+未知但可能产生较大影响的操作应进入确认流程，而不是触发全局锁死。
+
+完整性哈希不一致时只记录警告和审计信息，不应阻止整个系统继续运行。
+
+类似凭据的路径和符号链接逃逸不能继承普通 Workspace 权限。
+
+确认默认在 15 分钟后过期，并按以下条件隔离：
+
+```text
+用户/频道 scope
+operation
+工具名称
+参数哈希
+```
+
+门禁 Fast Path 默认关闭，只有私有配置明确启用后才可以使用。
