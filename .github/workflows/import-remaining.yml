@@ -1,16 +1,15 @@
 name: Complete sanitized template import
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.import/**'
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   import:
+    if: github.event.issue.title == 'complete-sanitized-import'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
