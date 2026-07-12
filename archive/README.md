@@ -1,14 +1,20 @@
-# Remaining source archive
+# 剩余源码归档
 
-The public template was imported from the sanitized third package. A small set of larger source and test files is stored in `remaining-files.tgz.b64` to preserve the complete package without exposing runtime secrets.
+本公开模板来自已经脱敏的第三版压缩包。为避免单次接口传输限制，部分较大的源码和测试文件保存在：
 
-From the repository root, run:
+```text
+archive/remaining-files.tgz.b64
+```
+
+该归档只包含已经脱敏的源码和测试，不包含生产凭据、数据库、日志或个人记忆。
+
+在仓库根目录运行：
 
 ```bash
 bash scripts/restore-remaining-files.sh
 ```
 
-The script decodes and extracts the following sanitized files into their normal paths:
+脚本会解码并还原以下文件到正常路径：
 
 - `src/grant-store.js`
 - `src/index.js`
@@ -22,4 +28,9 @@ The script decodes and extracts the following sanitized files into their normal 
 - `test/risk-resolver.test.js`
 - `test/template-config.test.js`
 
-After extraction, run `npm test` and `npm run build`.
+还原后运行：
+
+```bash
+npm test
+npm run build
+```
