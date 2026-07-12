@@ -1,3 +1,3 @@
-# Example memory
+# 示例记忆
 
-This file contains fictional, non-personal notes for local tests only.
+此文件只包含用于本地测试的虚构、非个人化记录。
