@@ -34,3 +34,5 @@ bash scripts/restore-remaining-files.sh
 npm test
 npm run build
 ```
+
+用途：保存因单次接口传输限制而单独归档的脱敏源码和测试文件。
