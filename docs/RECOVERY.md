@@ -1,14 +1,24 @@
-# Recovery
+# 恢复流程
 
-1. Clone this public template.
-2. Install dependencies.
-3. Copy `.env.example` to `private-overlay/.env`.
-4. Fill real values locally; do not commit the overlay.
-5. Install the template into a deployment directory.
-6. Apply the private overlay.
-7. Initialize a new empty database from `sql/schema.sql`.
-8. Import reviewed automation examples with new IDs.
-9. Start OpenClaw Gateway.
-10. Run tests, build, and manually validate high-risk confirmation behavior.
+1. 克隆此公开模板；
+2. 安装依赖；
+3. 将 `.env.example` 复制为 `private-overlay/.env`；
+4. 仅在本地填写真实值，不要提交私有覆盖层；
+5. 把模板安装到独立运行目录；
+6. 应用私有覆盖层；
+7. 根据 `sql/schema.sql` 初始化新的空数据库；
+8. 使用新的 ID 导入已经复核的自动化示例；
+9. 启动 OpenClaw Gateway；
+10. 运行测试和构建，并手动验证高风险确认流程。
 
-The public template cannot recover personal tokens, addresses, accounts, memories, or historical runtime state. Those must come from the owner's separately encrypted private backup.
+公开模板无法恢复以下个人数据：
+
+```text
+Token
+地址
+账号
+个人记忆
+历史运行状态
+```
+
+这些内容必须来自仓库所有者单独保存的加密私有备份。
