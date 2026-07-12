@@ -1,10 +1,26 @@
-# Architecture
+# 系统架构
 
 ```text
-tool call -> effect resolver -> capability resolver -> risk resolver
-          -> ALLOW | CONFIRM(operation) | DENY
+工具调用
+  → Effect Resolver（效果解析器）
+  → Capability Resolver（能力解析器）
+  → Risk Resolver（风险解析器）
+  → ALLOW | CONFIRM（创建待确认操作） | DENY
 ```
 
-Confirmation state is persisted in a new local SQLite database created at deployment time. Automation Grants are generated from example or private automation definitions and are evaluated on every tool call. Grant scope does not replace tool/parameter binding for confirmed operations.
+确认状态保存在部署时创建的本地 SQLite 数据库中。
 
-Platform adapters expose query, claim, order, and payment effects. This repository ships mock/example provider descriptions only. Access control is a generic disabled adapter configured through the private overlay.
+Automation Grant 根据示例配置或私有自动化定义生成，并在每次工具调用时进行检查。Grant 的权限范围不能替代已确认操作对工具名称和参数哈希的绑定。
+
+平台适配器按以下效果拆分：
+
+```text
+查询
+领取
+下单
+支付
+```
+
+本仓库只提供 Mock 或示例 Provider，不包含真实账号和生产接口。
+
+门禁能力使用通用适配器，默认关闭，只能通过私有覆盖配置启用。
