@@ -76,3 +76,4 @@ function canonicalTarget(path, workspaceDir = "") {
 function under(path, root) {
   return path === root || path.startsWith(`${root}${sep}`);
 }
+
