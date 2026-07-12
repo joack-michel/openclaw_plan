@@ -11,3 +11,4 @@ for path in src test sql scripts config policy examples docs package.json opencl
 done
 bash "$output/scripts/verify-public-template.sh" --release --skip-tests
 printf 'Allowlist export completed: %s\n' "$output"
+
