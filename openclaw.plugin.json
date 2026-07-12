@@ -1,7 +1,7 @@
 {
   "id": "execution-gate",
   "name": "OpenClaw 执行门",
-  "description": "用于保护 OpenClaw 工具调用的第一阶段确认与事务执行门。",
+  "description": "用途：为 OpenClaw 工具调用提供第一阶段确认、风险判断和事务执行保护。",
   "version": "0.1.0",
   "activation": {
     "onStartup": true
