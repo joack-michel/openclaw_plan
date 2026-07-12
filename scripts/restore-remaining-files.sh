@@ -10,3 +10,4 @@ trap 'rm -f "$tmp"' EXIT HUP INT TERM
 base64 -d "$payload" > "$tmp"
 tar -xzf "$tmp" -C "$root"
 printf 'Restored remaining sanitized source and test files.\n'
+
