@@ -1,5 +1,21 @@
-# Private backup guidance
+# 私有备份指南
 
-Keep a separate encrypted backup outside this Git repository for real environment files, Agent configuration, Automation and Grant configuration, access-control configuration, tokens, databases, and necessary personal memories.
+请在本 Git 仓库之外，单独保存经过加密的私有备份。建议备份：
 
-Do not place the archive under this repository. A suitable external location is `~/private-backups/`. This template does not create or run a private backup automatically.
+```text
+真实环境变量文件
+Agent 配置
+Automation 与 Grant 配置
+门禁配置
+Token 和其他凭据
+数据库
+必要的个人记忆
+```
+
+不要把私有备份放在本仓库目录中。可以使用类似下面的外部位置：
+
+```text
+~/private-backups/
+```
+
+本模板不会自动创建或运行私有备份任务。
