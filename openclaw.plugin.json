@@ -1,7 +1,7 @@
 {
   "id": "execution-gate",
-  "name": "Execution Gate",
-  "description": "First-stage confirmation and transaction gate for protected OpenClaw tool calls.",
+  "name": "OpenClaw 执行门",
+  "description": "用于保护 OpenClaw 工具调用的第一阶段确认与事务执行门。",
   "version": "0.1.0",
   "activation": {
     "onStartup": true
