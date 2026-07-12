@@ -12,3 +12,4 @@ for path in src sql config policy examples docs scripts package.json openclaw.pl
   cp -R "$repo_dir/$path" "$target/"
 done
 printf 'Installed sanitized template into %s\n' "$target"
+
