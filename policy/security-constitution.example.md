@@ -1,7 +1,7 @@
-# Security constitution example
+# 安全宪法示例
 
-- Ordinary workspace reads and writes are allowed.
-- Orders, payments, third-party messages, security policy changes, and credential changes require confirmation.
-- Explicit destructive system commands are denied.
-- Integrity mismatch is warning-only and is audited.
-- Access control fast paths are disabled until a private configuration explicitly enables one exact provider scope and command.
+- 普通 Workspace 读取和写入直接允许；
+- 下单、支付、第三方消息、安全策略修改和凭据修改需要确认；
+- 明确的系统破坏命令直接拒绝；
+- 完整性不一致仅记录警告和审计，不触发全局锁死；
+- 门禁 Fast Path 默认关闭，只有私有配置明确提供一个精确 Provider scope 和精确命令后才能启用。
