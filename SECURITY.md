@@ -1,5 +1,7 @@
-# Security policy
+# 安全策略
 
-Do not submit real tokens, databases, chat logs, personal memories, access-control configurations, addresses, or account identifiers in issues or pull requests.
+请勿在 Issue、Pull Request 或公开提交中提供真实 Token、数据库、聊天日志、个人记忆、门禁配置、地址或账号标识。
 
-Production credentials belong in a local `private-overlay/` or a secret manager. Reports should describe the category and affected file without reproducing a secret. High-risk behavior must remain confirmation-gated; explicit destructive behavior must remain denied.
+生产凭据应保存在本地 `private-overlay/` 或专用密钥管理器中。报告问题时只描述信息类别和受影响文件，不要复制秘密原文。
+
+高风险操作必须继续经过确认；明确的破坏性操作必须继续拒绝。
