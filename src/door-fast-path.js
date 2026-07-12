@@ -50,3 +50,4 @@ export function resetDoorFastPathStateForTest() {
   inflightScopes.clear();
   recentScopes.clear();
 }
+
