@@ -53,3 +53,4 @@ function canonicalPath(pathValue) {
 function expandHome(pathValue) {
   return pathValue.startsWith("~/") ? resolve(homedir(), pathValue.slice(2)) : pathValue;
 }
+
