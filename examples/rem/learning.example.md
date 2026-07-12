@@ -1,3 +1,3 @@
-# Example learning
+# 示例经验记录
 
-Single-file failure must not stop the remaining memory scan.
+单个文件失败时，不得停止剩余记忆文件的扫描。
