@@ -49,3 +49,4 @@ function firstString(...values) {
   }
   return "";
 }
+
