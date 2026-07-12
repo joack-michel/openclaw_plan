@@ -124,3 +124,4 @@ if test "$failures" -ne 0; then
   exit 1
 fi
 printf 'Verification passed: worktree, index, and recoverable Git objects are clear.\n'
+
