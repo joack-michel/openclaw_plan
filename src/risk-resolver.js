@@ -278,3 +278,4 @@ function isExampleAccessControlDoorExec(toolName, params, access) {
   const command = String(params.command || "").trim();
   return Boolean(access.command) && command === String(access.command).replace("${OPENCLAW_WORKSPACE}", workspacePath());
 }
+
