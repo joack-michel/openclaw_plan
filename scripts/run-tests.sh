@@ -22,3 +22,4 @@ REM_CRON_JOB_ID="rem-job" \
 MEITUAN_CRON_JOB_ID="meituan-job" \
 BENEFITS_PARENT_CRON_JOB_ID="benefits-job" \
 node --test test/*.test.js
+
