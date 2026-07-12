@@ -176,3 +176,4 @@ CREATE INDEX IF NOT EXISTS idx_automation_grants_cron_status
 
 CREATE INDEX IF NOT EXISTS idx_automation_grant_runs_session
   ON automation_grant_runs(session_key, status, started_at);
+
