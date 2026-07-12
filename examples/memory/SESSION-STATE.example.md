@@ -1,4 +1,4 @@
-# Example session state
+# 示例会话状态
 
-- current_task: demonstrate a sanitized template
+- current_task: 演示经过脱敏的公开模板
 - owner: <USER_NAME>
