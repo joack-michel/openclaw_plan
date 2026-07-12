@@ -260,3 +260,4 @@ function isAutomationStateRead(params) {
   const action = String(params.action || "list").trim();
   return /^(list|get|status|runs|history)$/i.test(action);
 }
+
