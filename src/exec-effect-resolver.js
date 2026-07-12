@@ -289,3 +289,4 @@ function stronger(left, right) {
   const rank = { L0: 0, L1: 1, L2: 2, L3: 3, L4: 4 };
   return rank[right.riskLevel] >= rank[left.riskLevel] ? right : left;
 }
+
