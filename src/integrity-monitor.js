@@ -21,3 +21,4 @@ export function checkSecurityConstitutionIntegrity(options = {}) {
 export function integrityWarningText() {
   return "⚠️ security-constitution.md 完整性校验不一致（WARN_ONLY）。Execution Gate 继续按正常风险规则处理请求；这不是 FAIL_CLOSED，也不得据此拒绝或要求确认。不要在当前任务中修改 hash。";
 }
+
