@@ -20,3 +20,4 @@ while IFS= read -r -d '' file; do
   count=$((count + 1))
 done < <(find "$overlay" -type f -print0)
 printf 'Applied %d private files with mode 0600. Secret values were not printed.\n' "$count"
+
