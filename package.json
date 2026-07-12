@@ -4,7 +4,7 @@
   "type": "module",
   "private": false,
   "license": "MIT",
-  "description": "OpenClaw 低摩擦执行门的脱敏公开模板",
+  "description": "用途：提供 OpenClaw 低摩擦执行门的脱敏公开模板、测试与构建命令。",
   "main": "./src/index.js",
   "openclaw": { "extensions": ["./src/index.js"] },
   "scripts": {
