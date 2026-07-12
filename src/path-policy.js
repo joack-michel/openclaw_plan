@@ -130,3 +130,4 @@ function realpathFromNearestExistingAncestor(pathValue) {
     cursor = parent;
   }
 }
+
