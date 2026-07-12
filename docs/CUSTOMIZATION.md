@@ -1,5 +1,19 @@
-# Customization
+# 自定义配置
 
-Use environment variables and `private-overlay/` for instance-specific values. Generate new automation IDs and review every Grant before activation. Keep query/claim scopes separate from order/payment. Configure owner notification with a private Telegram ID.
+实例相关的真实值应通过环境变量和 `private-overlay/` 提供。
 
-To enable an access-control provider, supply an exact scope and exact command in private configuration and explicitly set `ACCESS_CONTROL_ENABLED=true`. Never put a real address or provider credential in this repository.
+部署新实例时：
+
+1. 为 Automation 生成新的 ID；
+2. 在激活前逐条检查 Grant；
+3. 保持查询/领取权限与下单/支付权限分离；
+4. 使用私有 Telegram ID 配置本人通知；
+5. 不要把生产凭据写入公开仓库。
+
+启用门禁 Provider 时，必须在私有配置中提供精确的 scope 和精确命令，并显式设置：
+
+```dotenv
+ACCESS_CONTROL_ENABLED=true
+```
+
+不要在本仓库中写入真实地址、设备信息或 Provider 凭据。
