@@ -2,15 +2,5 @@
   "enabled": true,
   "dbPath": "~/.openclaw/state/execution-gate.sqlite",
   "operationTtlMs": 900000,
-  "executionTimeoutMs": 120000,
-  "accessControl": {
-    "enabled": false,
-    "provider": "example",
-    "community": "<COMMUNITY_NAME>",
-    "building": "<BUILDING_ID>",
-    "unit": "<UNIT_ID>",
-    "scope": "<ACCESS_CONTROL_SCOPE>",
-    "command": "<ACCESS_CONTROL_COMMAND>"
-  }
+  "executionTimeoutMs": 120000
 }
-
