@@ -2,29 +2,7 @@
 
 本模板提供事务式 Skill 注册机制，用于解决执行型 Skill 需要同时修改 Execution Gate、Host approvals、Agent 作用域和运行约束的问题。
 
-## 设计目标
-
-过去新增执行型 Skill 往往需要分别处理：
-
-```text
-SKILL.md
-Execution Gate capability
-风险等级
-Host exec approvals
-Agent / channel / actor scope
-cwd、超时、环境、去重与重试
-```
-
-任意一层遗漏都会导致：
-
-```text
-CONFIG_ERROR
-allowlist miss
-Gate 已允许但主机拒绝
-旧 approval 残留
-```
-
-新的注册流程改为：
+## 新的注册流程
 
 ```text
 execution-manifest.json
@@ -35,21 +13,13 @@ execution-manifest.json
 → Gateway 验证
 ```
 
-## 核心文件
-
-公开模板中的注册器入口：
-
-```text
-bin/skill-registry-cli.mjs
-```
-
 每个执行型 Skill 使用一份：
 
 ```text
 execution-manifest.json
 ```
 
-Manifest 只描述权限边界，不得包含 Token、Cookie、密码、密钥、真实身份或认证材料。
+Manifest 只描述权限边界，不得包含 Token、Cookie、密码、密钥、真实身份、认证材料或私有业务参数。
 
 ## 标准流程
 
@@ -82,7 +52,7 @@ node bin/skill-registry-cli.mjs skill register \
   examples/skills/example-skill
 ```
 
-注册器默认 dry-run。它只显示将要修改的内容，包括：
+注册器默认 dry-run，只显示将要修改的内容：
 
 ```text
 Skill ID
@@ -143,7 +113,7 @@ node bin/skill-registry-cli.mjs skill verify \
 
 ## 更新 Skill
 
-修改 Manifest、executable、argv、cwd 或风险范围后，先预览：
+先预览：
 
 ```bash
 node bin/skill-registry-cli.mjs skill update \
@@ -158,9 +128,7 @@ node bin/skill-registry-cli.mjs skill update \
   --apply
 ```
 
-更新会替换旧 approval，不能同时残留新旧入口。
-
-权限扩大应明确标记，例如：
+更新会替换旧 approval，不能同时残留新旧入口。权限扩大应明确标记：
 
 ```text
 SECURITY_SCOPE_EXPANSION
@@ -170,11 +138,6 @@ SECURITY_SCOPE_EXPANSION
 
 ```bash
 node bin/skill-registry-cli.mjs skill list
-```
-
-核验全部 Skill：
-
-```bash
 node bin/skill-registry-cli.mjs skill verify --all
 ```
 
@@ -192,14 +155,7 @@ node bin/skill-registry-cli.mjs skill remove example-skill
 node bin/skill-registry-cli.mjs skill remove example-skill --apply
 ```
 
-注销只移除：
-
-- Registry 记录；
-- Gate 注册；
-- Host approval；
-- 对应派生缓存。
-
-它不应自动删除 Skill 文件、Cron、Grant 或业务数据。
+注销只移除 Registry 记录、Gate 注册、Host approval 和对应派生缓存，不应自动删除 Skill 文件、Cron、Grant 或业务数据。
 
 ## Manifest 示例
 
@@ -239,8 +195,6 @@ node bin/skill-registry-cli.mjs skill remove example-skill --apply
 
 ## 安全边界
 
-注册器必须保持以下限制：
-
 - 只能由服务器本地受信任用户调用；
 - Telegram 和普通 Agent 不能注册或扩大权限；
 - 默认 dry-run；
@@ -250,7 +204,8 @@ node bin/skill-registry-cli.mjs skill remove example-skill --apply
 - 使用解释器时必须锁定唯一脚本与精确 argv；
 - 未登记 executable 继续返回 `CONFIG_ERROR`；
 - `CONFIG_ERROR` 不创建 `WAIT_CONFIRM`；
-- 注册、更新和验证不得触发门禁、外部领取、下单或支付。
+- 注册、更新和验证不得触发外部领取、下单、支付或其他真实业务动作；
+- 私有业务 Skill、生产 Manifest 和真实 approvals 不应上传公开仓库。
 
 ## 常见错误
 
@@ -258,16 +213,16 @@ node bin/skill-registry-cli.mjs skill remove example-skill --apply
 
 表示 executable、argv、cwd、作用域或 Host approval 未命中。它属于配置错误，反复回复“确认”不能修复。
 
+### Manifest 校验失败
+
+检查 schemaVersion、必填字段、绝对路径、通配符、Shell 控制符和秘密字段。
+
 ### Registry 漂移
 
-Manifest 已修改，但 Registry 仍保存旧 hash。运行 `skill update`，不要直接手改 Registry。
+Manifest、Registry、Gate 或 Host approvals 不一致时，先运行 `skill verify`，再通过 `skill update` 的 dry-run 查看差异。
 
-### Host approval 缺失
+### Gateway 未加载
 
-Gate 已识别能力，但主机侧精确 approval 不存在。应通过注册器修复，不能全局放行解释器。
+注册文件正确但运行时仍使用旧版本时，通过本地恢复 CLI 校验配置并重启 Gateway，不要扩大白名单绕过问题。
 
-### Gateway 未加载新版本
-
-Registry 和 approvals 已更新，但运行时仍使用旧快照。先运行 `skill verify`，再按恢复流程重启 Gateway。
-
-<!-- 用途：说明事务式 Skill 注册、更新、验证和注销流程。 -->
+<!-- 用途：说明事务式 Skill 注册、更新、验证与注销流程。 -->
