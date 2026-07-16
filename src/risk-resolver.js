@@ -1,7 +1,6 @@
 import { canonicalParams, isRecord, sha256Hex, stableStringify } from "./canonical-json.js";
 import { resolveCapability } from "./capability-resolver.js";
 import { evaluatePathPolicy } from "./path-policy.js";
-import { ACCESS_CONTROL, workspacePath } from "./template-config.js";
 
 const READONLY_PATTERNS = [
   /^read$/i,
@@ -57,8 +56,6 @@ const PAYMENT_PARAM_KEYS = [
   "paySession"
 ];
 
-export const EXAMPLE_ACCESS_CONTROL_SCOPE = ACCESS_CONTROL.scope;
-
 export function normalizeToolName(toolName) {
   return String(toolName || "").trim();
 }
@@ -110,25 +107,6 @@ export function resolveRisk(event, ctx = {}, config = {}) {
   }
   if (pathPolicy.action === "FORCE_PROTECTED") {
     return protectedDecision("PROTECTED", "L4", "sensitive-read", pathPolicy.reason, toolName, source, params);
-  }
-
-  if (isExampleAccessControlDoor(toolName, params, config)) {
-    return {
-      action: "ALLOW",
-      path: "L1_FAST_PATH",
-      riskLevel: "L1",
-      operationType: "door-open",
-      reason: "whitelisted ExampleAccessControl building-a-unit-1 door fast path",
-      toolName,
-      rawName,
-      source,
-      conflictScope: EXAMPLE_ACCESS_CONTROL_SCOPE,
-      reconcileMethod: "door-result-check"
-    };
-  }
-
-  if (isDoorLike(toolName)) {
-    return protectedDecision("PROTECTED", "L4", "door-open", "door target is not whitelisted for fast path", toolName, source, params);
   }
 
   if (toolName === "gateway" && isGatewayMutation(params)) {
@@ -249,33 +227,3 @@ function isExplicitlyDestructiveExec(toolName, params) {
   const command = String(params.command || "").trim();
   return /(^|\s)(?:mkfs(?:\.[a-z0-9]+)?|fdisk|parted)\b/i.test(command) || /(^|\s)rm\s+(?:-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r)\s+\/(?:\s|$|\*)/i.test(command);
 }
-
-function isDoorLike(toolName, params) {
-  return /(?:^|__)(?:door-open|open-door|access-control)$/i.test(toolName);
-}
-
-function isExampleAccessControlDoor(toolName, params, config) {
-  const access = { ...ACCESS_CONTROL, ...(config.accessControl || {}) };
-  if (access.enabled !== true) {
-    return false;
-  }
-  if (isExampleAccessControlDoorExec(toolName, params, access)) {
-    return true;
-  }
-  if (toolName !== "door-open") {
-    return false;
-  }
-  const hasCommunity = String(params.community || "").trim() === String(access.community || "example-community");
-  const hasBuilding = String(params.building || "").trim() === String(access.building || "building-a");
-  const hasUnit = String(params.unit || "").trim() === String(access.unit || "unit-1");
-  return hasCommunity && hasBuilding && hasUnit;
-}
-
-function isExampleAccessControlDoorExec(toolName, params, access) {
-  if (toolName !== "exec") {
-    return false;
-  }
-  const command = String(params.command || "").trim();
-  return Boolean(access.command) && command === String(access.command).replace("${OPENCLAW_WORKSPACE}", workspacePath());
-}
-
