@@ -7,7 +7,7 @@
 | 个人身份 | `<USER_NAME>`、`<USER_EMAIL>` |
 | Telegram 身份 | `<TELEGRAM_USER_ID>`、`<TELEGRAM_CHAT_ID>`、`<BOT_USERNAME>` |
 | 自动化运行状态 | `<JOB_ID>`、`<GRANT_ID>`、`<OPERATION_ID>`、`<RUN_ID>`、`<SESSION_ID>` |
-| 地址与门禁 | `<COMMUNITY_NAME>`、`<BUILDING_ID>`、`<UNIT_ID>`、`<ACCESS_CONTROL_SCOPE>` |
+| 私有业务资源 | `<PRIVATE_RESOURCE_ID>`、`<PRIVATE_CAPABILITY_SCOPE>` |
 | 服务器与网络 | `<SERVER_HOST>`、`<SERVER_IP>`、`<DOMAIN>`、`<WEBHOOK_URL>` |
 | 凭据 | 仅保留环境变量名称和占位符 |
 
