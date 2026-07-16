@@ -10,7 +10,7 @@
 PARTIAL
 ```
 
-核心安全改造和本地验证已完成；真实物理门禁和部分外部平台任务仍需要由实例所有者在合法条件下主动触发。
+核心安全改造、事务式 Skill 注册、本地恢复能力和 REM E2E 已完成；真实物理门禁和部分外部平台任务仍需要由实例所有者在合法条件下主动触发。
 
 ## 已验证
 
@@ -24,26 +24,66 @@ PARTIAL
 - L0/L1 exec 在执行前完成 Host approvals 预检；
 - 完整性哈希异常采用 `WARN_ONLY`，不会阻断诊断读取。
 
-### REM
+### 事务式 Skill 注册
 
-真实 REM 扫描已完成：
+已完成：
 
 ```text
-成功读取：15 个文件
-缺失 topics/：按 SKIPPED 处理
-固定 find：未出现 allowlist miss
+skill inspect
+skill register
+skill update
+skill verify
+skill remove
+skill list
 ```
 
-单个文件或目录缺失不会导致整个扫描中止。
+注册系统具备：
+
+- 默认 dry-run；
+- 原子事务；
+- 自动备份和失败回滚；
+- 重复注册幂等；
+- Manifest 严格校验；
+- Registry、Gate 和 Host approvals 同步；
+- executable、argv、cwd、作用域、超时和环境精确匹配；
+- Gateway 重启后验证；
+- 更新时清理旧 approval；
+- 未登记入口恢复为 `CONFIG_ERROR`。
+
+无外部副作用的烟测 Skill 已完成：
+
+```text
+inspect
+→ register dry-run
+→ register apply
+→ 重复注册无写入
+→ verify
+→ remove
+→ 最终未注册
+```
+
+### REM
+
+真实 REM 扫描已完成两类验证：
+
+```text
+完整读取验证：15 个文件成功，缺失 topics/ 按 SKIPPED 处理
+事务注册后 Gateway E2E：仅一次 exec，发现 7 个文件
+```
+
+固定 `find` 不再出现 allowlist miss，单个文件或目录缺失不会导致整个扫描中止。验证过程未执行写入或外部业务动作。
 
 ### 门禁模板边界
 
-已验证门禁 approvals 只允许：
+门禁类能力已从源码硬编码放行迁移为 Skill Registry 精确匹配。
+
+已验证只允许：
 
 ```text
 精确解释器路径
 精确脚本路径
-无额外参数
+精确 argv
+固定 cwd、作用域、超时和环境约束
 ```
 
 以下入口被拒绝：
@@ -56,7 +96,18 @@ Shell 拼接
 管道和重定向
 ```
 
-公开仓库不包含真实门禁接口、设备参数、地址、密钥或生产执行路径。
+迁移和 verify 没有触发真实开门。公开仓库不包含真实门禁接口、设备参数、地址、密钥或生产执行路径。
+
+### 福利任务编排
+
+福利任务编排能力已完成 Registry、Gate、Host approvals 和作用域核验。
+
+未执行：
+
+- Grant 新建、扩容或重置；
+- 已停用 Cron 恢复；
+- 下单或支付；
+- 超出合法周期和额度的外部业务动作。
 
 ### 本地恢复 CLI
 
@@ -86,10 +137,11 @@ undo
 ### 测试和版本管理
 
 ```text
-Execution Gate 测试：98 passed, 0 failed
+Execution Gate 测试：102 passed, 0 failed
 Gateway 重启后：active
 本地 Git：main 分支，工作区 clean
-公开远端：仅发布脱敏模板
+事务注册本地提交：922465f
+公开远端：仅发布脱敏模板和说明
 ```
 
 ## 有意保留的安全边界
@@ -111,7 +163,7 @@ Gateway 重启后：active
 
 - 由实例所有者主动触发的真实门禁端到端链路；
 - 在合法 Grant 周期和额度内运行的外部福利任务；
-- 不包含生产数据的恢复演练。
+- 不包含生产数据的完整恢复演练。
 
 不得为了完成验收而自动开门、重置 Grant、扩大授权、触发下单或支付。
 
