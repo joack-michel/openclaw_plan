@@ -33,18 +33,6 @@
         "minimum": 1000,
         "default": 120000
       },
-      "accessControl": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "enabled": { "type": "boolean", "default": false },
-          "community": { "type": "string", "default": "example-community" },
-          "building": { "type": "string", "default": "building-a" },
-          "unit": { "type": "string", "default": "unit-1" },
-          "scope": { "type": "string", "default": "example-community:building-a:unit-1:door-open" },
-          "command": { "type": "string", "default": "" }
-        }
-      },
       "agentIds": {
         "type": "object",
         "additionalProperties": false,
