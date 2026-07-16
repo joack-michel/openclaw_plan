@@ -18,12 +18,6 @@ export const REM_CRON_JOB_ID = String(process.env.REM_CRON_JOB_ID || "<REM_CRON_
 export const MEITUAN_CRON_JOB_ID = String(process.env.MEITUAN_CRON_JOB_ID || "<MEITUAN_CRON_JOB_ID>");
 export const BENEFITS_PARENT_CRON_JOB_ID = String(process.env.BENEFITS_PARENT_CRON_JOB_ID || "<BENEFITS_PARENT_CRON_JOB_ID>");
 
-export const ACCESS_CONTROL = Object.freeze({
-  enabled: process.env.ACCESS_CONTROL_ENABLED === "true",
-  scope: String(process.env.ACCESS_CONTROL_SCOPE || "example-community:building-a:unit-1:door-open"),
-  command: String(process.env.ACCESS_CONTROL_COMMAND || "")
-});
-
 export function workspacePath(...parts) {
   return resolve(OPENCLAW_WORKSPACE, ...parts);
 }
@@ -52,4 +46,3 @@ function agentId(...values) {
 function expandHome(value) {
   return String(value).startsWith("~/") ? resolve(homedir(), String(value).slice(2)) : String(value);
 }
-
