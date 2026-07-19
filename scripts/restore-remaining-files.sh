@@ -9,5 +9,5 @@ tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT HUP INT TERM
 base64 -d "$payload" > "$tmp"
 tar -xzf "$tmp" -C "$root"
-printf 'Restored remaining sanitized source and test files.\n'
-
+node "$root/scripts/apply-mcp-overlay.mjs"
+printf 'Restored sanitized source and applied the MCP management overlay.\n'
