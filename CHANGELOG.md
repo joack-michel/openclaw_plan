@@ -1,5 +1,25 @@
 # 更新记录
 
+## 2026-07-19
+
+### 结构化 MCP 管理
+
+- 新增 `mcp_manage` 通用工具；
+- `list/status/show/doctor/probe` 按 L0 读取处理；
+- 配置变更复用 L2 `WAIT_CONFIRM`、冻结参数哈希和一次性消费；
+- 明文凭据、敏感 Header、认证 URL 和任意命令直接拒绝；
+- stdio 仅接受固定 executable 与结构化 argv；
+- 本地管理 CLI 与聊天工具复用同一验证和执行实现；
+- 公开模板只包含占位符、环境变量名称和脱敏示例。
+
+### 发布安全
+
+- 增加地址、账号、金额、账单和公用事业数据检查；
+- 生产日志、运行记录、个人身份、真实端点和凭据未进入公开仓库；
+- MCP 示例使用保留域名或占位符，不包含可用认证信息。
+
+---
+
 ## 2026-07-17
 
 ### 安全模型 v2
@@ -36,11 +56,10 @@
 ### 迁移与验证
 
 - 现有固定业务 Skill 完成注册表精确匹配和作用域核验；
-- REM 已通过真实 Gateway E2E，仅一次 exec，发现 7 个文件；
+- REM 已通过真实 Gateway E2E；
 - 福利任务编排能力完成配置核验，未扩大 Grant；
 - 无外部副作用的烟测 Skill 完成注册、幂等验证和注销；
-- 测试更新为 `102 passed, 0 failed`；
-- Gateway 重启后保持 `active`。
+- Gateway 重启后保持可用。
 
 ### 公开仓库精简
 
@@ -52,16 +71,12 @@
 ### 文档
 
 - 新增 `docs/SKILL-REGISTRATION.md`；
-- 新增 `docs/UPDATE-2026-07-17.md`；
-- 更新 `docs/SECURITY-MODEL.md`；
-- 更新 `docs/RECOVERY.md`；
-- 更新 `docs/VALIDATION-2026-07.md`；
+- 更新安全、恢复和验证文档；
 - 更新 `SECURITY.md`。
 
 ### 公开与脱敏
 
 - 公开仓库只同步脱敏通用模板和文档；
-- 生产 Registry、真实 approvals、身份范围、私有业务参数、Grant ID、日志、数据库和备份不进入仓库；
-- 本地事务式注册实现对应提交：`922465f feat: add transactional skill registration`。
+- 生产 Registry、真实 approvals、身份范围、私有业务参数、日志、数据库和备份不进入仓库。
 
 <!-- 用途：记录公开模板的重要功能与安全边界更新。 -->
