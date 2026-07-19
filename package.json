@@ -1,16 +1,16 @@
 {
   "name": "openclaw-execution-gate-template",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "private": false,
   "license": "MIT",
-  "description": "用途：提供 OpenClaw 低摩擦执行门的脱敏公开模板、测试与构建命令。",
+  "description": "用途：提供 OpenClaw 低摩擦执行门、结构化 MCP 管理、测试与脱敏检查。",
   "main": "./src/index.js",
   "openclaw": { "extensions": ["./src/index.js"] },
   "scripts": {
     "test": "bash scripts/run-tests.sh && bash scripts/test-verify-public-template.sh",
-    "build": "find src -type f -name '*.js' -exec node --check {} \\;",
-    "verify": "bash scripts/verify-public-template.sh"
+    "build": "find src bin -type f \\( -name '*.js' -o -name '*.mjs' \\) -exec node --check {} \\;",
+    "verify": "bash scripts/verify-public-template.sh && bash scripts/verify-private-data.sh"
   },
   "engines": { "node": ">=22" },
   "peerDependencies": { "openclaw": ">=2026.6.11" }
