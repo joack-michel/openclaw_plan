@@ -1,5 +1,57 @@
 # 更新记录
 
+## 2026-07-24
+
+### 透明审批与工具可用性
+
+- 正常 `exec`、文件、浏览器、`web_fetch` 和已启用 MCP 工具继续对 Agent 可见；
+- Operation Bus 作为透明拦截层，不再替代或隐藏正常工具；
+- 审批后恢复并执行冻结的原始结构化调用，不重新生成命令，不要求用户手动运行脚本；
+- 重复批准继续返回 `ALREADY_CONSUMED`。
+
+### 审批卡交互
+
+- 普通审批卡固定为三个选项：`仅允许一次`、`5分钟内允许所有`、`拒绝`；
+- 内部 callback decision 保持 `allow-once`、`allow-always`、`deny`；
+- `allow-always` 改为固定 300 秒的 `SCOPED_TIME_WINDOW`，不表示永久授权；
+- 时间窗绑定 actor、channel、session、Gateway boot 和 policy version；
+- 新增 `/revoke-5min-allow` 主动撤销；
+- 删除旧的 10 分钟与会话授权用户文案。
+
+### 操作备注与中文界面
+
+- 审批卡增加通俗中文“操作备注”，说明操作用途和批准后的主要影响；
+- 备注在 operation 创建时生成、脱敏并保存，批准时不得重新生成；
+- 用户传入的 `note`、`operationNote` 等字段不能覆盖系统备注；
+- 用户可见字段和按钮使用中文，机器枚举、Hash、operation ID 与 callback data 保持原文。
+
+### 高风险边界
+
+- 金融审批卡只显示 `确认本次交易` 与 `拒绝`；
+- 真实支付、最终下单和转账不能被 5 分钟授权覆盖；
+- 秘密导出、安全核心修改、系统破坏和块设备操作不受宽泛授权覆盖。
+
+### 验证
+
+- `npm test` 通过；
+- `npm run build` 通过；
+- `git diff --check` 通过；
+- Gateway 已重启并确认 execution-gate 加载，服务为 active；
+- 自动化覆盖范围匹配、越界、撤销、过期和 Gateway 重启绑定；
+- 公开仓库继续只同步脱敏通用设计，不包含生产凭据、运行数据库和私有业务数据。
+
+### 适配版本
+
+```text
+Node.js 22.x
+OpenClaw 2026.6.11
+OpenClaw 2026.7.1-2
+Linux
+SQLite
+```
+
+---
+
 ## 2026-07-23
 
 ### 安全模型与审批链文档
