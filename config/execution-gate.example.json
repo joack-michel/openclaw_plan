@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "dbPath": "~/.openclaw/state/execution-gate.sqlite",
+  "operationTtlMs": 600000,
+  "executionTimeoutMs": 120000,
+  "cronApprovalBypassRules": []
+}

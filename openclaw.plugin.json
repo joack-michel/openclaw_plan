@@ -1,0 +1,67 @@
+{
+  "id": "execution-gate",
+  "name": "Execution Gate",
+  "description": "Transparent confirmation layer for native and MCP tool calls.",
+  "version": "0.3.0",
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "trustedToolPolicies": [
+      "transparent-operation-bus"
+    ],
+    "tools": [
+      "operation_bus"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "dbPath": {
+        "type": "string",
+        "default": "~/.openclaw/state/execution-gate.sqlite"
+      },
+      "operationTtlMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "default": 600000
+      },
+      "executionTimeoutMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "default": 120000
+      },
+      "cronApprovalBypassRules": {
+        "type": "array",
+        "default": [],
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "agentId",
+            "jobIds",
+            "allowTools",
+            "bypassApproval",
+            "audit",
+            "dedupe"
+          ],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "not": { "const": "*" } },
+            "agentId": { "type": "string", "minLength": 1, "not": { "const": "*" } },
+            "jobIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1, "not": { "const": "*" } } },
+            "allowTools": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1, "not": { "const": "*" } } },
+            "bypassApproval": { "const": true },
+            "audit": { "const": true },
+            "dedupe": { "const": true }
+          }
+        }
+      }
+    }
+  }
+}

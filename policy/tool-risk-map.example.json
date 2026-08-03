@@ -1,0 +1,7 @@
+{
+  "read": "ALLOW",
+  "write": "ALLOW_WHEN_ORDINARY_WORKSPACE",
+  "exec": "RESOLVE_EFFECT",
+  "create-order": "CONFIRM",
+  "payment": "CONFIRM"
+}

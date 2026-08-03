@@ -1,0 +1,26 @@
+{
+  "name": "openclaw-execution-gate",
+  "version": "0.3.0",
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "description": "Transparent confirmation, frozen-call replay, scoped grants, and automation safety for single-user OpenClaw deployments.",
+  "main": "./src/index.js",
+  "openclaw": {
+    "extensions": [
+      "./src/index.js"
+    ]
+  },
+  "scripts": {
+    "test": "bash scripts/run-tests.sh && bash scripts/test-verify-public-template.sh && bash scripts/test-installer.sh",
+    "build": "find src bin scripts -type f \\( -name '*.js' -o -name '*.mjs' \\) -exec node --check {} \\; && bash -n install.sh && find scripts -type f -name '*.sh' -exec bash -n {} \\;",
+    "verify": "bash scripts/verify-public-template.sh --release --skip-tests && bash scripts/verify-private-data.sh",
+    "patch:approval-ui": "node scripts/patch-openclaw-approval-ui.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.6.11"
+  }
+}
