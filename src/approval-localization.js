@@ -2,9 +2,8 @@
 
 // ---------- task-scoped approval card ----------
 
-export function formatTaskApprovalDescription({ taskSummary, allowedScopeDescription, ttlMs = 900_000 }) {
-  const minutes = Math.round(ttlMs / 60_000);
-  return `🛡️ 需要确认\n\n任务：\n${taskSummary}\n\n将允许：\n${allowedScopeDescription}\n\n有效期：\n仅限当前任务，任务结束后自动失效。`;
+export function formatTaskApprovalDescription({ taskSummary, allowedScopeDescription }) {
+  return `🛡️ 需要确认\n\n任务：\n${taskSummary}\n\n本次任务授权：\n${allowedScopeDescription}\n\n选择“仅允许一次”表示允许本次任务；任务结束、Gateway 重启或授权超时后自动失效。选择“允许 5 分钟”仍使用独立的 5 分钟范围授权。`;
 }
 
 export function formatApprovalDescription({ event, operationId, frozenHash, mode, displayNote }) {

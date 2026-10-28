@@ -35,4 +35,6 @@ node --test --test-concurrency=1 \
   test/transparent-runtime.test.js \
   test/scoped-time-window.test.js \
   test/cron-approval-bypass.test.js \
-  test/mcp-schema.test.js
+  test/mcp-schema.test.js \
+  test/fixed-cron-start.test.js \
+  test/telegram-patcher.test.mjs

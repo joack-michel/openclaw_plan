@@ -56,10 +56,10 @@ export function resolveCapability(event, ctx = {}, config = {}) {
   if (toolName === "gateway" && isGatewayMutation(params)) {
     return capability("CONFIG_MUTATION", "L4", toolName, source, params);
   }
-  if (toolName === "cron" && isCronMutation(params)) {
+  if (["cron", "automations"].includes(toolName) && isCronMutation(params)) {
     return capability("CRON_MUTATION", "L4", toolName, source, params);
   }
-  if (toolName === "cron" && isCronRead(params)) {
+  if (["cron", "automations"].includes(toolName) && isCronRead(params)) {
     return capability("READ_AUTOMATION_STATE", "L0", toolName, source, params);
   }
   if (isNativeReadOnlyTool(toolName, params)) {
@@ -274,12 +274,12 @@ function isGatewayMutation(params) {
 
 function isCronMutation(params) {
   const action = String(params.action || "").trim();
-  return /^(add|update|run|enable|disable|remove|delete)$/i.test(action);
+  return /^(add|create|update|edit|run|enable|disable|remove|delete|wake|next_check)$/i.test(action);
 }
 
 function isCronRead(params) {
   const action = String(params.action || "").trim();
-  return /^(list|get|status)$/i.test(action);
+  return /^(list|get|status|runs|history)$/i.test(action);
 }
 
 function isNativeReadOnlyTool(toolName, params) {

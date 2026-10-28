@@ -14,7 +14,7 @@ function harness(dbPath, policyVersion = "test-v1") {
   return { policy: policies[0], hooks, logs, command };
 }
 function withHarness(fn) { const dir = mkdtempSync(join(tmpdir(), "scoped-window-")); return Promise.resolve(fn(harness(join(dir, "state.sqlite")))).finally(() => rmSync(dir, { recursive: true, force: true })); }
-const ctx = { senderId: "owner", channelId: "telegram", sessionId: "session-a", sessionKey: "agent:main:telegram:owner", runId: "run-a" };
+const ctx = { workspaceDir: "/tmp/openclaw-template-user/.openclaw/workspace", senderId: "owner", channelId: "telegram", sessionId: "session-a", sessionKey: "agent:main:telegram:owner", runId: "run-a" };
 
 test("ordinary approval has exactly the three required protocol decisions", async () => withHarness(async ({ policy }) => {
   const pending = await policy.evaluate({ toolName: "web_fetch", toolCallId: "one", params: { url: "https://example.test" } }, ctx);

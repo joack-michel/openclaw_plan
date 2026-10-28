@@ -90,34 +90,28 @@ export class TaskApprovalStore {
     ) || null;
   }
 
-  canCover(taskApproval, { capability, toolName }) {
+  canCover(taskApproval, { capability, toolName, decisionKind = "NORMAL", scopeEligible = true }) {
     if (!taskApproval || taskApproval.status !== "active") return false;
     const allowedCaps = JSON.parse(taskApproval.allowed_capabilities_json || "[]");
     const allowedTools = JSON.parse(taskApproval.allowed_tools_json || "[]");
 
-    // Never cover protected operations
     if (NEVER_OPERATIONS.has(capability?.kind)) return false;
-    if (capability?.riskLevel === "L4") return false;
+    if (decisionKind !== "NORMAL" || scopeEligible === false) return false;
+    if (!riskAtOrBelow(capability?.riskLevel, taskApproval.risk_ceiling)) return false;
 
-    // The child agent inherits only this stored intersection.  A config such
-    // as alsoAllow:["exec"] never becomes a blanket exec authorization.
-    if (taskApproval.risk_ceiling === "L1" && capability?.riskLevel && capability.riskLevel !== "L0" && capability.riskLevel !== "L1") return false;
-    // Check explicit tool match
+    // The task:normal marker means ordinary operations in this exact task may
+    // vary by tool, while the stored L2 ceiling still blocks L3/L4 effects.
+    if (allowedCaps.includes("task:normal")) return true;
+
     if (allowedTools.includes(toolName)) return true;
-
-    // Check capability kind match
     if (capability?.kind && allowedCaps.includes(capability.kind)) return true;
 
-    // Check MCP source-level match: e.g. "mcp:mcd-mcp:read"
     const source = mcpSource(toolName);
     if (source && allowedCaps.some((c) => c === `mcp:${source}:read` || c === `mcp:${source}:any`)) {
       if (isReadCapability(capability)) return true;
     }
-
-    // Check generic capability ranges
     if (capability?.kind === "READ_WORKSPACE_SAFE" && allowedCaps.includes("workspace:read")) return true;
     if (capability?.kind === "QUERY_EXTERNAL" && allowedCaps.includes("mcp:query:read")) return true;
-
     return false;
   }
 
@@ -159,27 +153,24 @@ export class TaskApprovalStore {
 }
 
 export function resolveTaskId(ctx = {}, event = {}) {
-  // Prefer runId as the stable task identifier through the tool-call chain
-  const runId = ctx.runId || event.runId || "";
+  // Prefer a host-authoritative root/parent run when available, otherwise use
+  // current runId. Never fall back to sessionKey alone: that would allow a
+  // later user task in the same session to reuse an earlier task approval.
+  const runId = firstString(ctx.rootRunId, event.rootRunId, ctx.parentRunId, event.parentRunId, ctx.runId, event.runId);
   if (runId) return runId;
 
-  // Fall back to a composite of session + turn/message identifiers
-  const turnId = ctx.turnId || event.turnId || ctx.messageId || event.messageId || "";
-  const sessionKey = ctx.sessionKey || event.sessionKey || "";
+  const turnId = firstString(ctx.turnId, event.turnId, ctx.messageId, event.messageId, ctx.requester?.messageId, event.requester?.messageId);
+  const sessionKey = firstString(ctx.sessionKey, event.sessionKey);
   if (turnId && sessionKey) return sha256Hex(`${sessionKey}:${turnId}`);
-
-  // Last resort: sessionKey alone
-  if (sessionKey) return sha256Hex(`session:${sessionKey}`);
-
   return null;
 }
 
 export function resolveIdentity(ctx = {}, event = {}, bootId = "") {
   return {
-    actorId: firstString(ctx.senderId, event.senderId, ctx.actorId, event.actorId),
-    channelId: firstString(ctx.channelId, event.channelId),
+    actorId: firstString(ctx.senderId, event.senderId, ctx.actorId, event.actorId, ctx.requester?.senderId, event.requester?.senderId),
+    channelId: firstString(ctx.channelId, event.channelId, ctx.requester?.channelId, event.requester?.channelId, ctx.requester?.channel, event.requester?.channel),
     sessionId: firstString(ctx.sessionId, event.sessionId, ctx.sessionKey, event.sessionKey),
-    runId: firstString(ctx.runId, event.runId),
+    runId: firstString(ctx.rootRunId, event.rootRunId, ctx.parentRunId, event.parentRunId, ctx.runId, event.runId),
     agentId: firstString(ctx.agentId, event.agentId),
     parentAgentId: firstString(ctx.parentAgentId, event.parentAgentId, ctx.parent?.agentId, event.parent?.agentId),
     gatewayBootId: bootId,
@@ -236,6 +227,11 @@ function isReadCapability(decision) {
     "readonly", "query-status", "meituan-query-coupon", "mcdonalds-query-coupon",
   ]);
   return readKinds.has(decision.kind) || readOpTypes.has(decision.operationType);
+}
+
+function riskAtOrBelow(actual, ceiling) {
+  const rank = { L0: 0, L1: 1, L2: 2, L3: 3, L4: 4 };
+  return Object.hasOwn(rank, actual) && Object.hasOwn(rank, ceiling) && rank[actual] <= rank[ceiling];
 }
 
 function firstString(...values) {

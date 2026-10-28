@@ -344,7 +344,7 @@ systemctl --user is-active openclaw-gateway.service
 当前公开回归基线为：
 
 ```text
-66/66 tests passed
+101 passed, 0 failed, 1 public-environment-only test skipped
 ```
 
 涉及运行时或审批链的版本升级，还应真实验证：

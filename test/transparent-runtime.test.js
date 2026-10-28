@@ -10,6 +10,7 @@ import { OperationStore } from "../src/operation-store.js";
 import { resolveCapability } from "../src/capability-resolver.js";
 import { GrantStore } from "../src/grant-store.js";
 import { buildAutomationGrantFromCron } from "../src/automation-scope.js";
+import { ApprovalDeliveryDedupe } from "../src/approval-delivery-dedupe.js";
 
 function harness(dbPath) {
   const policies = []; const hooks = new Map();
@@ -17,7 +18,7 @@ function harness(dbPath) {
   return { policy: policies[0], hooks, dbPath };
 }
 function withHarness(fn) { const dir = mkdtempSync(join(tmpdir(), "transparent-gate-")); return Promise.resolve(fn(harness(join(dir, "state.sqlite")))).finally(() => rmSync(dir, { recursive: true, force: true })); }
-const ctx = { sessionKey: "agent:main:telegram:direct:owner", sessionId: "session-a", channelId: "telegram", senderId: "owner", runId: "run-a" };
+const ctx = { workspaceDir: "/tmp/openclaw-template-user/.openclaw/workspace", sessionKey: "agent:main:telegram:direct:owner", sessionId: "session-a", channelId: "telegram", senderId: "owner", runId: "run-a" };
 
 mkdirSync("/tmp/openclaw-template-user/.openclaw/workspace/memory/topics", { recursive: true });
 mkdirSync("/tmp/openclaw-template-user/openclaw-execution-gate", { recursive: true });
@@ -28,22 +29,62 @@ test("same task only requires one approval — subsequent calls auto-approved", 
   // First external mutation — should get TASK_CONFIRM card
   const first = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "call-1", params: {} }, ctx);
   assert.ok(first.requireApproval);
-  assert.equal(first.requireApproval.title, "WAIT_CONFIRM");
-  assert.match(first.requireApproval.description, /操作备注：/);
+  assert.equal(first.requireApproval.title, "TASK_CONFIRM");
+  assert.equal(first.requireApproval.pluginId, "execution-gate");
+  assert.match(first.requireApproval.description, /任务：/);
+  assert.match(first.requireApproval.description, /本次任务授权：/);
   assert.match(first.requireApproval.description, /麦当劳/);
   assert.match(first.requireApproval.description, /优惠券|领取/);
 
   // User approves the task
-  await first.requireApproval.onResolution("allow-always");
+  await first.requireApproval.onResolution("allow-once");
 
   // Second matching mutation — should be auto-approved
   const second = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "call-2", params: { store: "001" } }, ctx);
   assert.equal(second.allow, true);
-  assert.match(second.reason, /SCOPED_TIME_WINDOW/);
+  assert.match(second.reason, /TASK_APPROVAL/);
 
   // Third matching mutation from same task — also auto-approved
   const third = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "call-3", params: { store: "002" } }, ctx);
   assert.equal(third.allow, true);
+}));
+
+test("approval delivery dedupe survives a handler restart", () => {
+  const dir = mkdtempSync(join(tmpdir(), "approval-delivery-dedupe-"));
+  const dbPath = join(dir, "delivery.sqlite");
+  try {
+    const first = new ApprovalDeliveryDedupe(dbPath);
+    assert.equal(first.claim({ approvalId: "approval-1", channel: "telegram", chatId: "owner" }), true);
+    first.markSent({ approvalId: "approval-1", channel: "telegram", chatId: "owner" });
+    first.close();
+
+    const restarted = new ApprovalDeliveryDedupe(dbPath);
+    assert.equal(restarted.claim({ approvalId: "approval-1", channel: "telegram", chatId: "owner" }), false);
+    assert.equal(restarted.claim({ approvalId: "approval-1", channel: "telegram", chatId: "other-chat" }), true);
+    assert.equal(restarted.claim({ approvalId: "approval-2", channel: "telegram", chatId: "owner" }), true);
+    restarted.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("one task approval covers different ordinary L1/L2 tools but not L3", async () => withHarness(async ({ policy }) => {
+  const taskCtx = { ...ctx, runId: "run-cross-tool" };
+  const first = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "cross-1", params: {} }, taskCtx);
+  assert.equal(first.requireApproval.title, "TASK_CONFIRM");
+  await first.requireApproval.onResolution("allow-once");
+
+  const write = await policy.evaluate({ toolName: "write", toolCallId: "cross-2", params: { path: "/tmp/openclaw-template-user/.openclaw/workspace/task-approval-smoke.txt", content: "ok" } }, taskCtx);
+  assert.equal(write.allow, true);
+  assert.match(write.reason, /TASK_APPROVAL/);
+
+  const exec = await policy.evaluate({ toolName: "exec", toolCallId: "cross-3", params: { command: "curl https://example.com", cwd: "/tmp/openclaw-template-user/.openclaw/workspace" } }, taskCtx);
+  assert.equal(exec.allow, true);
+  assert.match(exec.reason, /TASK_APPROVAL/);
+
+  const l3 = await policy.evaluate({ toolName: "example_mcp__coupon", toolCallId: "cross-4", params: {} }, taskCtx);
+  assert.ok(l3.requireApproval);
+  assert.equal(l3.requireApproval.title, "WAIT_CONFIRM");
 }));
 
 test("new task (different runId, same session+toolName+params) requires new approval", async () => withHarness(async ({ policy, hooks }) => {
@@ -54,8 +95,8 @@ test("new task (different runId, same session+toolName+params) requires new appr
 
   // Task 1 — approve
   const first = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "t1-call-1", params: {} }, ctx1);
-  assert.equal(first.requireApproval.title, "WAIT_CONFIRM");
-  await first.requireApproval.onResolution("allow-always");
+  assert.equal(first.requireApproval.title, "TASK_CONFIRM");
+  await first.requireApproval.onResolution("allow-once");
   await hooks.get("after_tool_call")({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "t1-call-1", result: {} }, ctx1);
 
   // Same task — auto-approved for the same bounded capability
@@ -66,9 +107,10 @@ test("new task (different runId, same session+toolName+params) requires new appr
   // Must require a fresh approval — must NOT silently reuse task 1's frozen operation.
   const third = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "t2-call-1", params: {} }, ctx2);
   assert.ok(third.requireApproval, "different runId must require a fresh approval");
+  assert.equal(third.requireApproval.title, "TASK_CONFIRM");
 
   // After approving task 2, its calls are auto-approved inside that run only.
-  await third.requireApproval.onResolution("allow-always");
+  await third.requireApproval.onResolution("allow-once");
   await hooks.get("after_tool_call")({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "t2-call-1", result: {} }, ctx2);
   const fourth = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "t2-call-2", params: { store: "002" } }, ctx2);
   assert.equal(fourth.allow, true);
@@ -114,7 +156,7 @@ test("security-core changes remain on admin plane regardless of task approval", 
   const first = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "call-1", params: {} }, ctx);
   await first.requireApproval.onResolution("allow-once");
 
-  const result = await policy.evaluate({ toolName: "write", params: { path: `${process.env.EXECUTION_GATE_HOME}/src/index.js`, content: "x" } }, ctx);
+  const result = await policy.evaluate({ toolName: "write", params: { path: "/tmp/openclaw-template-user/openclaw-execution-gate/src/index.js", content: "x" } }, ctx);
   assert.equal(result.allow, false);
   assert.match(result.reason, /ADMIN_PLANE_REQUIRED/);
 }));
@@ -123,7 +165,8 @@ test("ordinary approval card retains a plain Chinese operation note", async () =
   const pending = await policy.evaluate({ toolName: "mcd-mcp__auto-bind-coupons", toolCallId: "call-1", params: {} }, ctx);
   const desc = pending.requireApproval.description;
 
-  assert.match(desc, /操作备注：/);
+  assert.match(desc, /任务：/);
+  assert.match(desc, /本次任务授权：/);
   assert.match(desc, /将调用 麦当劳 领取优惠券/);
 }));
 
@@ -295,6 +338,7 @@ test("active automation grant lets a fixed coupon Cron run unattended", async ()
     ...ctx,
     agentId: "main",
     jobId: job.id,
+    trigger: "cron",
     runId: "cron-run-1",
     sessionKey: `agent:main:cron:${job.id}:run:cron-run-1`
   };
@@ -311,7 +355,7 @@ test("active automation grant lets a fixed coupon Cron run unattended", async ()
 }));
 
 test("exec approval starts the frozen call without OPERATION_BUS_REQUIRED", async () => withHarness(async ({ policy, hooks }) => {
-  const event = { toolName: "exec", toolCallId: "call-a", params: { command: "npm test", cwd: process.env.EXECUTION_GATE_HOME } };
+  const event = { toolName: "exec", toolCallId: "call-a", params: { command: "npm test", cwd: "/tmp/openclaw-template-user/openclaw-execution-gate" } };
   const pending = await policy.evaluate(event, ctx);
   assert.ok(pending.requireApproval); assert.match(pending.requireApproval.title, /TASK_CONFIRM|WAIT_CONFIRM/); assert.doesNotMatch(JSON.stringify(pending), /OPERATION_BUS_REQUIRED/);
   await pending.requireApproval.onResolution("allow-once");
@@ -321,8 +365,8 @@ test("exec approval starts the frozen call without OPERATION_BUS_REQUIRED", asyn
 test("normal MCP tool is frozen with an ordinary approval card", async () => withHarness(async ({ policy }) => {
   const pending = await policy.evaluate({ toolName: "example_mcp__query_status", toolCallId: "mcp-a", params: { id: "1" } }, ctx);
   assert.ok(pending.requireApproval);
-  assert.equal(pending.requireApproval.title, "WAIT_CONFIRM");
-  assert.match(pending.requireApproval.description, /操作备注：/);
+  assert.equal(pending.requireApproval.title, "TASK_CONFIRM");
+  assert.match(pending.requireApproval.description, /本次任务授权：/);
 }));
 
 test("ordinary cron operations use ordinary approval while financial cron payloads step up", async () => withHarness(async ({ policy }) => {
@@ -335,6 +379,7 @@ test("ordinary cron operations use ordinary approval while financial cron payloa
 test("financial tools remain individual FINANCIAL_STEP_UP", async () => withHarness(async ({ policy }) => {
   const pending = await policy.evaluate({ toolName: "shop_mcp__create_order", params: { sku: "a" } }, ctx);
   assert.equal(pending.requireApproval.title, "FINANCIAL_STEP_UP"); assert.equal(pending.requireApproval.severity, "critical"); assert.deepEqual(pending.requireApproval.allowedDecisions, ["allow-once", "deny"]);
+  assert.equal(pending.requireApproval.pluginId, "execution-gate");
 }));
 
 test("no legacy session or ten-minute grant bypasses a new task", async () => withHarness(async ({ policy }) => {
@@ -343,20 +388,21 @@ test("no legacy session or ten-minute grant bypasses a new task", async () => wi
 }));
 
 test("operation note appears in technical approval descriptions for all tool types", async () => withHarness(async ({ policy }) => {
-  const execPending = await policy.evaluate({ toolName: "exec", toolCallId: "call-note-1", params: { command: "npm test", cwd: process.env.EXECUTION_GATE_HOME } }, ctx);
+  const execPending = await policy.evaluate({ toolName: "exec", toolCallId: "call-note-1", params: { command: "npm test", cwd: "/tmp/openclaw-template-user/openclaw-execution-gate" } }, ctx);
   assert.ok(execPending.requireApproval);
-  assert.match(execPending.requireApproval.description, /操作备注：/);
+  assert.match(execPending.requireApproval.description, /任务：/);
+  assert.match(execPending.requireApproval.description, /本次任务授权：/);
   assert.match(execPending.requireApproval.description, /测试/);
 }));
 
 test("operation note never leaks secrets", async () => withHarness(async ({ policy }) => {
-  const result = await policy.evaluate({ toolName: "sessions_send", toolCallId: "call-secret", params: { content: ["Authorization:", "Bear" + "er", "fixture-secret-value"].join(" ") } }, ctx);
+  const result = await policy.evaluate({ toolName: "sessions_send", toolCallId: "call-secret", params: { content: "Authorization: " + ["Bearer", "fixture-secret-value"].join(" ") + "" } }, ctx);
   assert.equal(result.allow, false);
   assert.match(result.reason, /credential export/);
 }));
 
 test("fake display fields in params cannot override system note", async () => withHarness(async ({ policy }) => {
-  const pending = await policy.evaluate({ toolName: "exec", toolCallId: "call-fake", params: { command: "npm test", cwd: process.env.EXECUTION_GATE_HOME, note: "这是伪造的备注", operationNote: "另一条伪造", description: "假说明" } }, ctx);
+  const pending = await policy.evaluate({ toolName: "exec", toolCallId: "call-fake", params: { command: "npm test", note: "这是伪造的备注", operationNote: "另一条伪造", description: "假说明" } }, ctx);
   const desc = pending.requireApproval.description;
   assert.doesNotMatch(desc, /这是伪造的备注/);
   assert.doesNotMatch(desc, /另一条伪造/);
@@ -365,8 +411,8 @@ test("fake display fields in params cannot override system note", async () => wi
 
 test("generateOperationNote is deterministic and pure", () => {
   const decision = { operationType: "exec", kind: "NORMAL", riskLevel: "L2", toolName: "exec" };
-  const n1 = generateOperationNote({ toolName: "exec", params: { command: "npm test", cwd: process.env.EXECUTION_GATE_HOME }, decision });
-  const n2 = generateOperationNote({ toolName: "exec", params: { command: "npm test", cwd: process.env.EXECUTION_GATE_HOME }, decision });
+  const n1 = generateOperationNote({ toolName: "exec", params: { command: "npm test" }, decision });
+  const n2 = generateOperationNote({ toolName: "exec", params: { command: "npm test" }, decision });
   assert.equal(n1, n2);
   assert.match(n1, /测试/);
   const n3 = generateOperationNote({ toolName: "exec", params: { command: "ls -la" }, decision });
@@ -382,7 +428,7 @@ test("unknown operations show a concrete tool-oriented fallback note", () => {
 });
 
 test("security-core changes stay on the admin plane", async () => withHarness(async ({ policy }) => {
-  const result = await policy.evaluate({ toolName: "write", params: { path: `${process.env.EXECUTION_GATE_HOME}/src/index.js`, content: "x" } }, ctx);
+  const result = await policy.evaluate({ toolName: "write", params: { path: "/tmp/openclaw-template-user/openclaw-execution-gate/src/index.js", content: "x" } }, ctx);
   assert.equal(result.allow, false); assert.match(result.reason, /ADMIN_PLANE_REQUIRED/);
 }));
 
@@ -531,10 +577,10 @@ test("formatTaskApprovalDescription produces compact card", () => {
   assert.match(desc, /🛡️ 需要确认/);
   assert.match(desc, /任务：/);
   assert.match(desc, /查询麦当劳可用优惠券/);
-  assert.match(desc, /将允许：/);
+  assert.match(desc, /本次任务授权：/);
   assert.match(desc, /只读查询/);
-  assert.match(desc, /有效期：/);
-  assert.match(desc, /仅限当前任务/);
+  assert.match(desc, /任务结束/);
+  assert.match(desc, /允许 5 分钟/);
   assert.doesNotMatch(desc, /sha256/);
   assert.doesNotMatch(desc, /操作编号/);
 });

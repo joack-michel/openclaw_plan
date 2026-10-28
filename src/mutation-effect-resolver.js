@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { resolve, sep } from "node:path";
 import { isSensitivePath, resolveSafePath } from "./path-policy.js";
-import { REM_CRON_JOB_ID } from "./template-config.js";
+import { REM_CRON_JOB_ID, OPENCLAW_WORKSPACE, OPENCLAW_HOME, EXECUTION_GATE_HOME } from "./template-config.js";
 
 
 const FILE_TOOLS = new Set(["write", "edit", "apply_patch"]);
@@ -31,12 +31,12 @@ function effect(kind, operationType, reason, resourceKey) {
 }
 
 function isSecurityPolicyPath(path) {
-  const policyRoot = resolve(homedir(), ".openclaw/workspace/policy");
+  const policyRoot = resolve(OPENCLAW_WORKSPACE, "policy");
   return under(path, policyRoot) && /(?:^|\/)(?:security-constitution\.md|execution-policy\.md|tool-risk-map\.json|integrity(?:\/|$))/i.test(path.slice(policyRoot.length));
 }
 
 function isConfigPath(path) {
-  const openclawRoot = resolve(homedir(), ".openclaw");
+  const openclawRoot = OPENCLAW_HOME;
   return path === resolve(openclawRoot, "openclaw.json") || /(?:^|\/)(?:\.env[^/]*|credentials?|secrets?|auth-profiles?)(?:$|\/|\.)/i.test(path);
 }
 
@@ -44,14 +44,14 @@ function isRegistryPath(path) { return /(?:execution-manifest\.json$|\.openclaw\
 function isApprovalsPath(path) { return /\.openclaw\/state\/exec-approvals\.json$/i.test(path); }
 
 function isSecurityComponentPath(path) {
-  return under(path, resolve(homedir(), "openclaw-execution-gate"));
+  return under(path, EXECUTION_GATE_HOME);
 }
 
 function isOrdinaryWorkspacePath(path) {
   return [
-    resolve(homedir(), ".openclaw/workspace"),
-    resolve(homedir(), ".openclaw/skills"),
-    resolve(homedir(), ".openclaw/agents")
+    OPENCLAW_WORKSPACE,
+    resolve(OPENCLAW_HOME, "skills"),
+    resolve(OPENCLAW_HOME, "agents")
   ].some((root) => under(path, root));
 }
 
@@ -62,8 +62,8 @@ function isExplicitOwnTaskState(params, path) {
 function isRemOwnMemoryMutation(ctx, path) {
   const sessionKey = String(ctx.sessionKey || "");
   if (ctx.agentId !== "main" || (!sessionKey.includes(`:cron:${REM_CRON_JOB_ID}:run:`) && ctx.executionGateManualRem !== true)) return false;
-  const workspace = resolve(String(ctx.workspaceDir || resolve(homedir(), ".openclaw/workspace")));
-  if (workspace !== resolve(homedir(), ".openclaw/workspace")) return false;
+  const workspace = resolve(String(ctx.workspaceDir || OPENCLAW_WORKSPACE));
+  if (workspace !== OPENCLAW_WORKSPACE) return false;
   const canonical = resolveSafePath(path, workspace);
   if (!canonical.ok || isSensitivePath(canonical.realPath)) return false;
   const roots = [

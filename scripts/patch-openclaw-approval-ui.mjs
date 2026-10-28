@@ -33,7 +33,8 @@ const targets = [
     ]
   },
   {
-    prefix: "approval-reaction-runtime-",
+    prefix: "approval-reaction-runtime",
+    dirs: [dist, join(dist, "plugin-sdk")],
     replacements: [
       ['label: "Allow Once"', 'label: "仅允许一次"'],
       ['label: "Allow Always"', 'label: "允许 5 分钟"'],
@@ -47,6 +48,14 @@ const targets = [
       ['if (view.agentId) details.push(`Agent: ${view.agentId}`);', 'if (view.agentId) details.push(`智能体：${view.agentId}`);'],
       ['details.push(`Expires in: ${formatExecApprovalExpiresIn(view.expiresAtMs, params.nowMs)}`);', 'details.push(`有效期：${formatExecApprovalExpiresIn(view.expiresAtMs, params.nowMs)}`);'],
       ['details.push(`Full id: \\`${view.approvalId}\\``);', ''],
+      ['const header = ["**Plugin approval required**", `**ID:** ${view.approvalId}`];', 'const header = ["🛡️ 需要审批"];'],
+      ['const details = [`**Title:** ${view.title}`];', 'const details = [];'],
+      ['if (view.description) details.push(`**Description:** ${view.description}`);', 'if (view.description) details.push(view.description);'],
+      ['if (view.toolName) details.push(`**Tool:** ${view.toolName}`);', 'if (view.toolName) details.push(`工具：${view.toolName}`);'],
+      ['if (view.pluginId) details.push(`**Plugin:** ${view.pluginId}`);', 'if (view.pluginId) details.push(`插件：${view.pluginId}`);'],
+      ['if (view.agentId) details.push(`**Agent:** ${view.agentId}`);', 'if (view.agentId) details.push(`智能体：${view.agentId}`);'],
+      ['details.push(`**Expires in:** ${formatExecApprovalExpiresIn(view.expiresAtMs, params.nowMs)}`);', 'details.push(`有效期：${formatExecApprovalExpiresIn(view.expiresAtMs, params.nowMs)}`);'],
+      ['details.push(`**Full id:** \\`${view.approvalId}\\``);', ''],
     ]
   },
   {
@@ -86,11 +95,14 @@ const targets = [
 
 let changedFiles = 0;
 for (const target of targets) {
-  const files = readdirSync(dist).filter((name) => name.startsWith(target.prefix) && name.endsWith(".js"));
+  const searchDirs = target.dirs ?? [dist];
+  const files = searchDirs.flatMap((dir) => !existsSync(dir) ? [] : readdirSync(dir)
+    .filter((name) => name.startsWith(target.prefix) && name.endsWith(".js"))
+    .map((name) => ({ dir, name })));
   if (files.length === 0) throw new Error(`expected at least one ${target.prefix}*.js`);
   let matchedFamily = false;
-  for (const name of files) {
-    const file = join(dist, name);
+  for (const { dir, name } of files) {
+    const file = join(dir, name);
     let text = readFileSync(file, "utf8");
     let changed = false;
     for (const [from, to] of target.replacements) {
@@ -194,10 +206,13 @@ const forbiddenRuntimeStrings = [
   'Resolved by:',
 ];
 for (const target of targets) {
-  for (const name of readdirSync(dist).filter((entry) => entry.startsWith(target.prefix) && entry.endsWith(".js"))) {
-    const text = readFileSync(join(dist, name), "utf8");
-    for (const forbidden of forbiddenRuntimeStrings) {
-      if (text.includes(forbidden)) throw new Error(`approval UI localization incomplete in ${name}: ${forbidden}`);
+  for (const dir of target.dirs ?? [dist]) {
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir).filter((entry) => entry.startsWith(target.prefix) && entry.endsWith(".js"))) {
+      const text = readFileSync(join(dir, name), "utf8");
+      for (const forbidden of forbiddenRuntimeStrings) {
+        if (text.includes(forbidden)) throw new Error(`approval UI localization incomplete in ${name}: ${forbidden}`);
+      }
     }
   }
 }
